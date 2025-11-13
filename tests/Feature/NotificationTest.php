@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Notification\Enums\NotificationType;
 use App\Domain\Notification\Models\Notification;
 use App\Domain\User\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,7 +26,7 @@ class NotificationTest extends TestCase
     {
         Notification::factory()->count(3)->create(['user_id' => $this->user->id]);
 
-        $response = $this->getJson('/api/notifications');
+        $response = $this->getJson(route('notifications.index'));
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -47,12 +48,12 @@ class NotificationTest extends TestCase
     public function test_can_create_notification(): void
     {
         $notificationData = [
-            'title' => 'Test Notification',
-            'message' => 'Test Message',
-            'type' => 'info',
+            'title' => fake()->sentence(),
+            'message' => fake()->paragraph(),
+            'type' => fake()->randomElement(NotificationType::cases())->value,
         ];
 
-        $response = $this->postJson('/api/notifications', $notificationData);
+        $response = $this->postJson(route('notifications.store'), $notificationData);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -68,7 +69,7 @@ class NotificationTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('notifications', [
-            'title' => 'Test Notification',
+            'title' => $notificationData['title'],
             'user_id' => $this->user->id,
         ]);
     }
@@ -80,7 +81,7 @@ class NotificationTest extends TestCase
             'read_at' => null,
         ]);
 
-        $response = $this->patchJson("/api/notifications/{$notification->id}/read");
+        $response = $this->patchJson(route('notifications.read', $notification));
 
         $response->assertStatus(200)
             ->assertJson([
@@ -102,12 +103,14 @@ class NotificationTest extends TestCase
             'read_at' => null,
         ]);
 
-        $response = $this->patchJson('/api/notifications/mark-all-read');
+        $response = $this->patchJson(route('notifications.mark-all-read'));
 
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'All notifications marked as read',
-                'count' => 3
+                'message' => 'Все уведомления отмечены как прочитанные',
+                'data' => [
+                    'count' => 3
+                ]
             ]);
 
         $this->assertDatabaseMissing('notifications', [
@@ -127,7 +130,7 @@ class NotificationTest extends TestCase
             'read_at' => now(),
         ]);
 
-        $response = $this->getJson('/api/notifications/unread-count');
+        $response = $this->getJson(route('notifications.unread-count'));
 
         $response->assertStatus(200)
             ->assertJson([

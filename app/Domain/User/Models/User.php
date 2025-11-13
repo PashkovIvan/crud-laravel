@@ -4,6 +4,7 @@ namespace App\Domain\User\Models;
 
 use App\Domain\Notification\Models\Notification;
 use App\Domain\Task\Models\Task;
+use App\Domain\User\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -51,11 +52,11 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->hasRole('admin');
+        return $this->hasRole(UserRole::ADMIN->value);
     }
 
     public function isManager(): bool
     {
-        return $this->hasRole('manager');
+        return $this->hasRole(UserRole::MANAGER->value);
     }
 }

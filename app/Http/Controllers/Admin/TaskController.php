@@ -2,14 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Common\Constants\PaginationConstants;
+use App\Domain\Common\Enums\ErrorMessage;
+use App\Domain\Common\Enums\SuccessMessage;
+use App\Domain\Common\Helpers\IdHelper;
+use App\Domain\Task\DTO\CreateTaskDTO;
+use App\Domain\Task\DTO\UpdateTaskDTO;
 use App\Domain\Task\Models\Task;
 use App\Domain\Task\Services\TaskService;
+use App\Domain\User\Models\User;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Task\AssignTaskRequest;
+use App\Http\Requests\Task\ListTaskRequest;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Throwable;
 
 class TaskController extends Controller
 {
@@ -17,93 +27,131 @@ class TaskController extends Controller
         private TaskService $taskService
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(ListTaskRequest $request): JsonResponse
     {
-        $tasks = $this->taskService->getAll($request->get('per_page', 15));
-        
-        return response()->json([
-            'data' => TaskResource::collection($tasks->items()),
-            'pagination' => [
-                'current_page' => $tasks->currentPage(),
-                'last_page' => $tasks->lastPage(),
-                'per_page' => $tasks->perPage(),
-                'total' => $tasks->total(),
-            ]
-        ]);
+        try {
+            $validated = $request->validated();
+            $perPage = $validated['per_page'] ?? PaginationConstants::DEFAULT_PER_PAGE;
+            
+            $tasks = $this->taskService->getAll($perPage);
+            return $this->paginatedResponse($tasks, TaskResource::class);
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task listing');
+        }
     }
 
     public function store(StoreTaskRequest $request): JsonResponse
     {
-        $task = $this->taskService->create($request->validated(), $request->user());
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ], 201);
+        try {
+            $dto = CreateTaskDTO::fromArray($request->validated(), $request->user()->id);
+            $task = $this->taskService->create($dto);
+            
+            return $this->successResponse(
+                new TaskResource($task),
+                SuccessMessage::TASK_CREATED->value,
+                201
+            );
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task creation');
+        }
     }
 
     public function show(Task $task): JsonResponse
     {
-        $task = $this->taskService->getById($task->id);
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ]);
+        try {
+            $task->load(['user', 'assignedUser']);
+            
+            return $this->successResponse(new TaskResource($task));
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task retrieval');
+        }
     }
 
     public function update(UpdateTaskRequest $request, Task $task): JsonResponse
     {
-        $task = $this->taskService->update($task, $request->validated());
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ]);
+        try {
+            $dto = UpdateTaskDTO::fromArray($request->validated());
+            $task = $this->taskService->update($task, $dto);
+            
+            return $this->successResponse(
+                new TaskResource($task),
+                SuccessMessage::TASK_UPDATED->value
+            );
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task update');
+        }
     }
 
     public function destroy(Task $task): JsonResponse
     {
-        $this->taskService->delete($task);
-        
-        return response()->json(null, 204);
+        try {
+            $this->taskService->delete($task);
+            
+            return response()->json(null, 204);
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task deletion');
+        }
     }
 
     public function markCompleted(Task $task): JsonResponse
     {
-        $task = $this->taskService->markAsCompleted($task);
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ]);
+        try {
+            $task = $this->taskService->markAsCompleted($task);
+            
+            return $this->successResponse(
+                new TaskResource($task),
+                SuccessMessage::TASK_COMPLETED->value
+            );
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task completion');
+        }
     }
 
     public function markInProgress(Task $task): JsonResponse
     {
-        $task = $this->taskService->markAsInProgress($task);
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ]);
+        try {
+            $task = $this->taskService->markAsInProgress($task);
+            
+            return $this->successResponse(
+                new TaskResource($task),
+                SuccessMessage::TASK_IN_PROGRESS->value
+            );
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task status update');
+        }
     }
 
     public function markPending(Task $task): JsonResponse
     {
-        $task = $this->taskService->markAsPending($task);
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ]);
+        try {
+            $task = $this->taskService->markAsPending($task);
+            
+            return $this->successResponse(
+                new TaskResource($task),
+                SuccessMessage::TASK_PENDING->value
+            );
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task status update');
+        }
     }
 
-    public function assign(Request $request, Task $task): JsonResponse
+    public function assign(AssignTaskRequest $request, Task $task): JsonResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id'
-        ]);
-
-        $user = \App\Domain\User\Models\User::findOrFail($request->user_id);
-        $task = $this->taskService->assignToUser($task, $user);
-        
-        return response()->json([
-            'data' => new TaskResource($task)
-        ]);
+        try {
+            $validated = $request->validated();
+            
+            $userId = IdHelper::decrypt($validated['user_id']);
+            $user = User::findOrFail($userId);
+            $task = $this->taskService->assignToUser($task, $user);
+            
+            return $this->successResponse(
+                new TaskResource($task),
+                SuccessMessage::TASK_ASSIGNED->value
+            );
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(ErrorMessage::USER_NOT_FOUND->value, 404);
+        } catch (Throwable $e) {
+            return $this->handleException($e, 'Task assignment');
+        }
     }
 }

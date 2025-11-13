@@ -2,18 +2,20 @@
 
 namespace App\Domain\Notification\Services;
 
+use App\Domain\Common\Constants\PaginationConstants;
+use App\Domain\Notification\DTO\CreateNotificationDTO;
 use App\Domain\Notification\Models\Notification;
 use App\Domain\User\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class NotificationService
 {
-    public function create(array $data, User $user): Notification
+    public function create(CreateNotificationDTO $dto): Notification
     {
-        return $user->notifications()->create($data);
+        return Notification::create($dto->toArray());
     }
 
-    public function getByUser(User $user, int $perPage = 15): LengthAwarePaginator
+    public function getByUser(User $user, int $perPage = PaginationConstants::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
         return $user->notifications()
             ->orderBy('created_at', 'desc')

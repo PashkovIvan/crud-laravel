@@ -2,6 +2,7 @@
 
 namespace App\Domain\Notification\Models;
 
+use App\Domain\Notification\Enums\NotificationType;
 use App\Domain\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,7 @@ class Notification extends Model
     protected function casts(): array
     {
         return [
+            'type' => NotificationType::class,
             'read_at' => 'datetime',
             'data' => 'array',
         ];

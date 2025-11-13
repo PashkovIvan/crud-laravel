@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Common\Helpers\IdHelper;
+use App\Domain\Task\Enums\TaskPriority;
+use App\Domain\Task\Enums\TaskStatus;
 use App\Domain\Task\Models\Task;
 use App\Domain\User\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,7 +28,7 @@ class TaskTest extends TestCase
     {
         Task::factory()->count(3)->create(['user_id' => $this->user->id]);
 
-        $response = $this->getJson('/api/admin/tasks');
+        $response = $this->getJson(route('admin.tasks.index'));
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -50,13 +53,13 @@ class TaskTest extends TestCase
     public function test_can_create_a_task(): void
     {
         $taskData = [
-            'title' => 'Test Task',
-            'description' => 'Test Description',
-            'priority' => 'high',
-            'due_date' => now()->addDay()->toISOString(),
+            'title' => fake()->sentence(),
+            'description' => fake()->paragraph(),
+            'priority' => fake()->randomElement(TaskPriority::cases())->value,
+            'due_date' => fake()->dateTimeBetween('now', '+1 month')->format('Y-m-d H:i:s'),
         ];
 
-        $response = $this->postJson('/api/admin/tasks', $taskData);
+        $response = $this->postJson(route('admin.tasks.store'), $taskData);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -74,7 +77,7 @@ class TaskTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('tasks', [
-            'title' => 'Test Task',
+            'title' => $taskData['title'],
             'user_id' => $this->user->id,
         ]);
     }
@@ -83,7 +86,7 @@ class TaskTest extends TestCase
     {
         $task = Task::factory()->create(['user_id' => $this->user->id]);
 
-        $response = $this->getJson("/api/admin/tasks/{$task->id}");
+        $response = $this->getJson(route('admin.tasks.show', $task));
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -106,24 +109,24 @@ class TaskTest extends TestCase
         $task = Task::factory()->create(['user_id' => $this->user->id]);
 
         $updateData = [
-            'title' => 'Updated Task',
-            'status' => 'in_progress',
+            'title' => fake()->sentence(),
+            'status' => TaskStatus::IN_PROGRESS->value,
         ];
 
-        $response = $this->putJson("/api/admin/tasks/{$task->id}", $updateData);
+        $response = $this->putJson(route('admin.tasks.update', $task), $updateData);
 
         $response->assertStatus(200)
             ->assertJson([
                 'data' => [
-                    'title' => 'Updated Task',
-                    'status' => 'in_progress',
+                    'title' => $updateData['title'],
+                    'status' => TaskStatus::IN_PROGRESS->value,
                 ]
             ]);
 
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
-            'title' => 'Updated Task',
-            'status' => 'in_progress',
+            'title' => $updateData['title'],
+            'status' => TaskStatus::IN_PROGRESS->value,
         ]);
     }
 
@@ -131,7 +134,7 @@ class TaskTest extends TestCase
     {
         $task = Task::factory()->create(['user_id' => $this->user->id]);
 
-        $response = $this->deleteJson("/api/admin/tasks/{$task->id}");
+        $response = $this->deleteJson(route('admin.tasks.destroy', $task));
 
         $response->assertStatus(204);
 
@@ -144,18 +147,56 @@ class TaskTest extends TestCase
     {
         $task = Task::factory()->pending()->create(['user_id' => $this->user->id]);
 
-        $response = $this->patchJson("/api/admin/tasks/{$task->id}/completed");
+        $response = $this->patchJson(route('admin.tasks.completed', $task));
 
         $response->assertStatus(200)
             ->assertJson([
                 'data' => [
-                    'status' => 'completed',
+                    'status' => TaskStatus::COMPLETED->value,
                 ]
             ]);
 
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
-            'status' => 'completed',
+            'status' => TaskStatus::COMPLETED->value,
+        ]);
+    }
+
+    public function test_can_mark_task_as_in_progress(): void
+    {
+        $task = Task::factory()->pending()->create(['user_id' => $this->user->id]);
+
+        $response = $this->patchJson(route('admin.tasks.in-progress', $task));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'status' => TaskStatus::IN_PROGRESS->value,
+                ]
+            ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => TaskStatus::IN_PROGRESS->value,
+        ]);
+    }
+
+    public function test_can_mark_task_as_pending(): void
+    {
+        $task = Task::factory()->inProgress()->create(['user_id' => $this->user->id]);
+
+        $response = $this->patchJson(route('admin.tasks.pending', $task));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'status' => TaskStatus::PENDING->value,
+                ]
+            ]);
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => TaskStatus::PENDING->value,
         ]);
     }
 
@@ -164,15 +205,15 @@ class TaskTest extends TestCase
         Task::factory()->count(5)->create(['user_id' => $this->user->id]);
         Task::factory()->completed()->count(3)->create(['user_id' => $this->user->id]);
 
-        $response = $this->getJson('/api/admin/dashboard/statistics');
+        $response = $this->getJson(route('admin.dashboard.statistics'));
 
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'tasks' => [
                     'total',
-                    'completed',
-                    'in_progress',
-                    'pending',
+                    TaskStatus::COMPLETED->value,
+                    TaskStatus::IN_PROGRESS->value,
+                    TaskStatus::PENDING->value,
                     'overdue',
                 ],
                 'users' => [
@@ -188,15 +229,15 @@ class TaskTest extends TestCase
         $task = Task::factory()->create(['user_id' => $this->user->id]);
         $assignedUser = User::factory()->create();
 
-        $response = $this->patchJson("/api/admin/tasks/{$task->id}/assign", [
-            'user_id' => $assignedUser->id
+        $response = $this->patchJson(route('admin.tasks.assign', $task), [
+            'user_id' => IdHelper::encrypt($assignedUser->id)
         ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'data' => [
                     'assigned_user' => [
-                        'id' => $assignedUser->id,
+                        'id' => IdHelper::encrypt($assignedUser->id),
                         'name' => $assignedUser->name,
                         'email' => $assignedUser->email,
                     ]

@@ -2,6 +2,8 @@
 
 namespace App\Domain\Task\Models;
 
+use App\Domain\Task\Enums\TaskPriority;
+use App\Domain\Task\Enums\TaskStatus;
 use App\Domain\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +26,8 @@ class Task extends Model
     protected function casts(): array
     {
         return [
+            'status' => TaskStatus::class,
+            'priority' => TaskPriority::class,
             'due_date' => 'datetime',
         ];
     }
@@ -40,31 +44,31 @@ class Task extends Model
 
     public function markAsCompleted(): void
     {
-        $this->update(['status' => 'completed']);
+        $this->update(['status' => TaskStatus::COMPLETED]);
     }
 
     public function markAsInProgress(): void
     {
-        $this->update(['status' => 'in_progress']);
+        $this->update(['status' => TaskStatus::IN_PROGRESS]);
     }
 
     public function markAsPending(): void
     {
-        $this->update(['status' => 'pending']);
+        $this->update(['status' => TaskStatus::PENDING]);
     }
 
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === TaskStatus::COMPLETED;
     }
 
     public function isInProgress(): bool
     {
-        return $this->status === 'in_progress';
+        return $this->status === TaskStatus::IN_PROGRESS;
     }
 
     public function isPending(): bool
     {
-        return $this->status === 'pending';
+        return $this->status === TaskStatus::PENDING;
     }
 }

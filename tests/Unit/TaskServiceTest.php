@@ -2,6 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Domain\Task\DTO\CreateTaskDTO;
+use App\Domain\Task\DTO\UpdateTaskDTO;
+use App\Domain\Task\Enums\TaskPriority;
+use App\Domain\Task\Enums\TaskStatus;
 use App\Domain\Task\Models\Task;
 use App\Domain\Task\Services\TaskService;
 use App\Domain\User\Models\User;
@@ -25,19 +29,20 @@ class TaskServiceTest extends TestCase
     public function test_can_create_a_task(): void
     {
         $data = [
-            'title' => 'Test Task',
-            'description' => 'Test Description',
-            'priority' => 'high',
+            'title' => fake()->sentence(),
+            'description' => fake()->paragraph(),
+            'priority' => TaskPriority::HIGH->value,
         ];
 
-        $task = $this->taskService->create($data, $this->user);
+        $dto = CreateTaskDTO::fromArray($data, $this->user->id);
+        $task = $this->taskService->create($dto);
 
         $this->assertInstanceOf(Task::class, $task);
-        $this->assertEquals('Test Task', $task->title);
+        $this->assertEquals($data['title'], $task->title);
         $this->assertEquals($this->user->id, $task->user_id);
 
         $this->assertDatabaseHas('tasks', [
-            'title' => 'Test Task',
+            'title' => $data['title'],
             'user_id' => $this->user->id,
         ]);
     }
@@ -47,19 +52,20 @@ class TaskServiceTest extends TestCase
         $task = Task::factory()->create(['user_id' => $this->user->id]);
 
         $data = [
-            'title' => 'Updated Task',
-            'status' => 'in_progress',
+            'title' => fake()->sentence(),
+            'status' => TaskStatus::IN_PROGRESS->value,
         ];
 
-        $updatedTask = $this->taskService->update($task, $data);
+        $dto = UpdateTaskDTO::fromArray($data);
+        $updatedTask = $this->taskService->update($task, $dto);
 
-        $this->assertEquals('Updated Task', $updatedTask->title);
-        $this->assertEquals('in_progress', $updatedTask->status);
+        $this->assertEquals($data['title'], $updatedTask->title);
+        $this->assertEquals(TaskStatus::IN_PROGRESS, $updatedTask->status);
 
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
-            'title' => 'Updated Task',
-            'status' => 'in_progress',
+            'title' => $data['title'],
+            'status' => TaskStatus::IN_PROGRESS->value,
         ]);
     }
 
@@ -81,7 +87,7 @@ class TaskServiceTest extends TestCase
 
         $tasks = $this->taskService->getByUser($this->user);
 
-        $this->assertCount(3, $tasks);
+        $this->assertCount(3, $tasks->items());
     }
 
     public function test_can_get_all_tasks(): void
@@ -90,7 +96,16 @@ class TaskServiceTest extends TestCase
 
         $tasks = $this->taskService->getAll();
 
-        $this->assertCount(5, $tasks);
+        $this->assertCount(5, $tasks->items());
+    }
+
+    public function test_can_get_task_by_id(): void
+    {
+        $task = Task::factory()->create(['user_id' => $this->user->id]);
+
+        $foundTask = $this->taskService->getById($task->id);
+
+        $this->assertEquals($task->id, $foundTask->id);
     }
 
     public function test_can_mark_task_as_completed(): void
@@ -99,11 +114,39 @@ class TaskServiceTest extends TestCase
 
         $updatedTask = $this->taskService->markAsCompleted($task);
 
-        $this->assertEquals('completed', $updatedTask->status);
+        $this->assertEquals(TaskStatus::COMPLETED, $updatedTask->status);
 
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
-            'status' => 'completed',
+            'status' => TaskStatus::COMPLETED->value,
+        ]);
+    }
+
+    public function test_can_mark_task_as_in_progress(): void
+    {
+        $task = Task::factory()->pending()->create(['user_id' => $this->user->id]);
+
+        $updatedTask = $this->taskService->markAsInProgress($task);
+
+        $this->assertEquals(TaskStatus::IN_PROGRESS, $updatedTask->status);
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => TaskStatus::IN_PROGRESS->value,
+        ]);
+    }
+
+    public function test_can_mark_task_as_pending(): void
+    {
+        $task = Task::factory()->inProgress()->create(['user_id' => $this->user->id]);
+
+        $updatedTask = $this->taskService->markAsPending($task);
+
+        $this->assertEquals(TaskStatus::PENDING, $updatedTask->status);
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => TaskStatus::PENDING->value,
         ]);
     }
 
@@ -139,5 +182,6 @@ class TaskServiceTest extends TestCase
         $this->assertEquals(10, $stats['total']);
         $this->assertEquals(3, $stats['completed']);
         $this->assertEquals(2, $stats['in_progress']);
+        $this->assertEquals(5, $stats['pending']);
     }
 }

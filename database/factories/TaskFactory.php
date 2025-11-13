@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Domain\Task\Enums\TaskPriority;
+use App\Domain\Task\Enums\TaskStatus;
 use App\Domain\Task\Models\Task;
 use App\Domain\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,8 +17,8 @@ class TaskFactory extends Factory
         return [
             'title' => fake()->sentence(),
             'description' => fake()->paragraph(),
-            'status' => fake()->randomElement(['pending', 'in_progress', 'completed']),
-            'priority' => fake()->randomElement(['low', 'medium', 'high']),
+            'status' => fake()->randomElement(TaskStatus::cases()),
+            'priority' => fake()->randomElement(TaskPriority::cases()),
             'due_date' => fake()->optional()->dateTimeBetween('now', '+1 month'),
             'user_id' => User::factory(),
             'assigned_to' => fake()->optional()->randomElement(User::pluck('id')),
@@ -26,21 +28,21 @@ class TaskFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'pending',
+            'status' => TaskStatus::PENDING,
         ]);
     }
 
     public function inProgress(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'in_progress',
+            'status' => TaskStatus::IN_PROGRESS,
         ]);
     }
 
     public function completed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'completed',
+            'status' => TaskStatus::COMPLETED,
         ]);
     }
 }

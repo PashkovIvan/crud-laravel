@@ -2,20 +2,24 @@
 
 namespace App\Domain\Task\Services;
 
+use App\Domain\Common\Constants\PaginationConstants;
+use App\Domain\Task\DTO\CreateTaskDTO;
+use App\Domain\Task\DTO\UpdateTaskDTO;
+use App\Domain\Task\Enums\TaskStatus;
 use App\Domain\Task\Models\Task;
 use App\Domain\User\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class TaskService
 {
-    public function create(array $data, User $user): Task
+    public function create(CreateTaskDTO $dto): Task
     {
-        return $user->tasks()->create($data);
+        return Task::create($dto->toArray());
     }
 
-    public function update(Task $task, array $data): Task
+    public function update(Task $task, UpdateTaskDTO $dto): Task
     {
-        $task->update($data);
+        $task->update($dto->toArray());
         return $task->fresh();
     }
 
@@ -24,14 +28,14 @@ class TaskService
         return $task->delete();
     }
 
-    public function getByUser(User $user, int $perPage = 15): LengthAwarePaginator
+    public function getByUser(User $user, int $perPage = PaginationConstants::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
         return $user->tasks()
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
-    public function getAll(int $perPage = 15): LengthAwarePaginator
+    public function getAll(int $perPage = PaginationConstants::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
         return Task::with(['user', 'assignedUser'])
             ->orderBy('created_at', 'desc')
@@ -71,11 +75,11 @@ class TaskService
     {
         return [
             'total' => Task::count(),
-            'completed' => Task::where('status', 'completed')->count(),
-            'in_progress' => Task::where('status', 'in_progress')->count(),
-            'pending' => Task::where('status', 'pending')->count(),
+            'completed' => Task::where('status', TaskStatus::COMPLETED)->count(),
+            'in_progress' => Task::where('status', TaskStatus::IN_PROGRESS)->count(),
+            'pending' => Task::where('status', TaskStatus::PENDING)->count(),
             'overdue' => Task::where('due_date', '<', now())
-                ->where('status', '!=', 'completed')
+                ->whereNot('status', TaskStatus::COMPLETED)
                 ->count(),
         ];
     }
