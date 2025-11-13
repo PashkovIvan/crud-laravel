@@ -21,17 +21,4 @@ class IdHelper
             throw new InvalidArgumentException('Некорректный формат зашифрованного ID');
         }
     }
-
-    public static function tryDecrypt(?string $encryptedId): ?int
-    {
-        if ($encryptedId === null) {
-            return null;
-        }
-
-        try {
-            return self::decrypt($encryptedId);
-        } catch (Exception $e) {
-            return null;
-        }
-    }
 }
