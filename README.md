@@ -1,61 +1,228 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Task Manager API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+RESTful API приложение для управления задачами, построенное на Laravel 12 с использованием PHP 8.4 и PostgreSQL.
 
-## About Laravel
+## 📋 Описание
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Task Manager - это полнофункциональное API приложение для управления задачами с поддержкой:
+- CRUD операций для задач
+- Системы уведомлений
+- Аутентификации и авторизации
+- Админ-панели со статистикой
+- Шифрования чувствительных данных
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠 Технологический стек
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **PHP 8.4** - Язык программирования
+- **Laravel 12** - PHP фреймворк
+- **PostgreSQL 15** - База данных
+- **Redis 7** - Кэширование и очереди
+- **Docker** - Контейнеризация
+- **Nginx** - Веб-сервер
+- **Pest** - Фреймворк для тестирования
 
-## Learning Laravel
+## 🏗 Архитектура
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Проект построен с использованием следующих принципов и подходов:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **DDD (Domain-Driven Design)** - Структура организована по доменам (Task, User, Notification)
+- **SOLID** - Принципы объектно-ориентированного программирования
+- **DRY** - Избежание дублирования кода
+- **KISS** - Простота и понятность кода
+- **TDD** - Разработка через тестирование
+- **Clean Code** - Чистый и поддерживаемый код
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📁 Структура проекта
 
-## Laravel Sponsors
+```
+app/
+├── Domain/              # Доменная логика (DDD)
+│   ├── Common/         # Общие компоненты
+│   ├── Task/           # Домен задач
+│   ├── User/           # Домен пользователей
+│   └── Notification/   # Домен уведомлений
+├── Http/
+│   ├── Controllers/    # Контроллеры
+│   ├── Requests/       # Валидация запросов
+│   ├── Resources/      # API Resources
+│   ├── Middleware/     # Middleware
+│   └── Rules/          # Кастомные правила валидации
+├── Policies/           # Политики авторизации
+└── Providers/          # Service Providers
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Установка и развертывание
 
-### Premium Partners
+### Требования
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Docker и Docker Compose
+- Git
 
-## Contributing
+### Быстрая установка
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Клонируйте репозиторий:
+```bash
+git clone <repository-url>
+cd crud-laravel
+```
 
-## Code of Conduct
+2. Запустите установку:
+```bash
+chmod +x build.sh
+./build.sh
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Скрипт автоматически:
+- Создаст `.env` файл из `.env.example`
+- Соберет и запустит Docker контейнеры
+- Установит зависимости Composer
+- Выполнит миграции базы данных
+- Сгенерирует ключ приложения
 
-## Security Vulnerabilities
+### Полная пересборка
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Для полной пересборки проекта (удаление всех данных):
+```bash
+chmod +x rebuild.sh
+./rebuild.sh
+```
 
-## License
+## 🧪 Запуск тестов
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Проект использует **Pest** для тестирования. Тесты используют ту же базу данных PostgreSQL, что и основное приложение.
+
+Для запуска тестов используйте:
+```bash
+chmod +x test.sh
+./test.sh
+```
+
+Или напрямую через Docker:
+```bash
+docker-compose exec app php artisan test
+```
+
+Проект включает:
+- **Feature тесты** - Тестирование API endpoints
+- **Unit тесты** - Тестирование сервисов и бизнес-логики
+
+## 📡 API Endpoints
+
+Все API endpoints возвращают JSON. Для аутентификации используется **Laravel Sanctum** с токенами.
+
+### Аутентификация
+
+Для доступа к защищенным маршрутам необходимо:
+1. Зарегистрироваться или войти в систему
+2. Получить токен из ответа
+3. Передавать токен в заголовке `Authorization: Bearer {token}`
+
+### Публичные маршруты
+
+- `POST /api/register` - Регистрация пользователя
+  ```json
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123",
+    "password_confirmation": "password123"
+  }
+  ```
+- `POST /api/login` - Вход в систему
+  ```json
+  {
+    "email": "john@example.com",
+    "password": "password123"
+  }
+  ```
+
+### Защищенные маршруты (требуют аутентификации)
+
+#### Аутентификация
+- `POST /api/logout` - Выйти из системы
+- `GET /api/me` - Получить информацию о текущем аутентифицированном пользователе
+
+#### Уведомления
+- `GET /api/notifications` - Получить список уведомлений (с пагинацией)
+- `POST /api/notifications` - Создать новое уведомление
+- `PATCH /api/notifications/{id}/read` - Отметить уведомление как прочитанное
+- `PATCH /api/notifications/mark-all-read` - Отметить все уведомления как прочитанные
+- `GET /api/notifications/unread-count` - Получить количество непрочитанных уведомлений
+
+### Админ-маршруты (требуют роль admin)
+
+#### Задачи
+- `GET /api/admin/tasks` - Получить список всех задач (с пагинацией)
+- `POST /api/admin/tasks` - Создать новую задачу
+- `GET /api/admin/tasks/{id}` - Получить информацию о задаче
+- `PUT /api/admin/tasks/{id}` - Обновить задачу
+- `DELETE /api/admin/tasks/{id}` - Удалить задачу
+- `PATCH /api/admin/tasks/{id}/completed` - Отметить задачу как завершенную
+- `PATCH /api/admin/tasks/{id}/in-progress` - Отметить задачу как в работе
+- `PATCH /api/admin/tasks/{id}/pending` - Отметить задачу как в ожидании
+- `PATCH /api/admin/tasks/{id}/assign` - Назначить задачу пользователю
+
+#### Статистика
+- `GET /api/admin/dashboard/statistics` - Статистика для админ-панели
+
+## 🔐 Безопасность
+
+- **XSS защита** - Валидация всех пользовательских данных на XSS атаки
+- **Шифрование ID** - Чувствительные ID шифруются при передаче клиенту
+- **Sanctum аутентификация** - Token-based аутентификация
+- **Роли пользователей** - Поддержка ролей (admin, manager, user)
+- **Валидация запросов** - Все запросы валидируются через Form Requests
+
+## 📊 База данных
+
+Проект использует PostgreSQL со следующими основными таблицами:
+- `users` - Пользователи
+- `tasks` - Задачи
+- `notifications` - Уведомления
+- `sessions` - Сессии
+- `cache` - Кэш
+- `jobs` - Очереди задач
+
+## 📝 Особенности реализации
+
+- **DTO (Data Transfer Objects)** - Использование DTO для передачи данных между слоями
+- **Enums** - PHP Enums для статусов, приоритетов, типов уведомлений
+- **API Resources** - Трансформация моделей для API ответов
+- **Form Requests** - Валидация запросов
+- **Service Layer** - Бизнес-логика в сервисах
+- **Policies** - Авторизация через политики
+
+## 🐳 Docker
+
+Проект включает следующие сервисы:
+- **app** - PHP-FPM приложение (порт 9000, внутренний)
+- **nginx** - Веб-сервер (порт 8080, внешний)
+- **db** - PostgreSQL 15 (порт 5432, внешний)
+- **redis** - Redis 7 (порт 6379, внешний)
+
+Все сервисы работают в единой Docker сети `task-manager-network`.
+
+## 📚 Дополнительная информация
+
+- Все контроллеры используют централизованную обработку ошибок через базовый `Controller`
+- Все ответы API стандартизированы (успешные и ошибочные)
+- Код полностью покрыт Feature и Unit тестами
+- Соблюдены PSR стандарты кодирования
+- Используется кастомная валидация для защиты от XSS атак
+- ID пользователей и задач шифруются при передаче клиенту
+- Тесты используют ту же базу данных PostgreSQL, что и основное приложение
+
+## 👥 Роли пользователей
+
+- **admin** - Полный доступ ко всем функциям
+- **manager** - Расширенные права
+- **user** - Базовые права
+
+## 📞 Поддержка
+
+Для вопросов и предложений создайте issue в репозитории.
+
+## 📄 Лицензия
+
+Проект создан в целях практики проектирования Laravel-приложений.
+

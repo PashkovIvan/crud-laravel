@@ -16,10 +16,6 @@ RUN apt-get update && apt-get install -y \
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Установка Node.js и npm
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
 # Создание пользователя для приложения
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
@@ -37,13 +33,10 @@ WORKDIR /var/www
 COPY --chown=www:www composer.json composer.lock ./
 
 # Установка зависимостей PHP
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 # Копирование остальных файлов
 COPY --chown=www:www . .
-
-# Установка зависимостей Node.js
-RUN npm install && npm run build
 
 # Открытие порта
 EXPOSE 9000
