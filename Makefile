@@ -1,0 +1,94 @@
+# Определение команды docker-compose (поддержка старой и новой версии)
+DOCKER_COMPOSE := $(shell which docker-compose 2>/dev/null || echo "docker compose")
+
+.PHONY: help build rebuild test up down logs shell migrate fresh clean install
+
+help: ## Показать справку по командам
+	@echo "Доступные команды:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+build: ## Собрать и запустить проект (первая установка)
+	@echo "🚀 Начинаем установку проекта Task Manager..."
+	@if [ ! -f .env ]; then \
+		echo "📄 Копирование .env файла..."; \
+		cp .env.example .env; \
+	fi
+	@echo "🧹 Очистка неиспользуемых ресурсов Docker..."
+	@docker system prune -f
+	@echo "🏗️  Сборка и запуск контейнеров..."
+	@$(DOCKER_COMPOSE) up -d --build
+	@echo "⏳ Ожидание готовности PostgreSQL..."
+	@until $(DOCKER_COMPOSE) exec -T db pg_isready -U task_user > /dev/null 2>&1; do \
+		sleep 2; \
+	done
+	@echo "✅ PostgreSQL готов"
+	@echo "📦 Установка зависимостей Composer..."
+	@$(DOCKER_COMPOSE) exec -T app composer install || $(DOCKER_COMPOSE) exec -T app composer update
+	@echo "🔑 Генерация ключа приложения..."
+	@$(DOCKER_COMPOSE) exec -T app php artisan key:generate
+	@echo "🔄 Выполнение миграций..."
+	@$(DOCKER_COMPOSE) exec -T app php artisan migrate
+	@echo "🧹 Очистка кэша..."
+	@$(DOCKER_COMPOSE) exec -T app php artisan cache:clear
+	@$(DOCKER_COMPOSE) exec -T app php artisan config:clear
+	@$(DOCKER_COMPOSE) exec -T app php artisan route:clear
+	@$(DOCKER_COMPOSE) exec -T app php artisan view:clear
+	@echo "✨ Установка завершена!"
+	@echo "🌐 Проект доступен по адресу: http://localhost:8080"
+
+rebuild: ## Полная пересборка проекта (удаление всех данных)
+	@echo "🔄 Начинаем полную пересборку проекта Task Manager..."
+	@echo "🛑 Остановка и удаление контейнеров, образов и томов..."
+	@$(DOCKER_COMPOSE) down --rmi all --volumes
+	@$(MAKE) build
+
+up: ## Запустить контейнеры
+	@$(DOCKER_COMPOSE) up -d
+	@echo "✅ Контейнеры запущены"
+
+down: ## Остановить контейнеры
+	@$(DOCKER_COMPOSE) down
+	@echo "✅ Контейнеры остановлены"
+
+test: ## Запустить тесты
+	@echo "🚀 Начинаем тестирование Task Manager..."
+	@if ! $(DOCKER_COMPOSE) ps | grep -q "app.*running"; then \
+		echo "❌ Приложение не запущено. Запустите проект командой: make build"; \
+		exit 1; \
+	fi
+	@if ! $(DOCKER_COMPOSE) ps | grep -q "db.*running"; then \
+		echo "❌ PostgreSQL не запущен. Запустите проект командой: make build"; \
+		exit 1; \
+	fi
+	@echo "✓ Все сервисы запущены"
+	@echo "🧹 Очистка логов..."
+	@$(DOCKER_COMPOSE) exec -T app truncate -s 0 storage/logs/laravel.log 2>/dev/null || \
+	$(DOCKER_COMPOSE) exec -T app sh -c "echo '' > storage/logs/laravel.log" 2>/dev/null || true
+	@echo "🧪 Запуск тестов..."
+	@$(DOCKER_COMPOSE) exec -T app php artisan test || (echo "❌ Некоторые тесты не прошли" && exit 1)
+	@echo "✅ Все тесты прошли успешно"
+
+logs: ## Показать логи приложения
+	@$(DOCKER_COMPOSE) logs -f app
+
+shell: ## Войти в контейнер приложения
+	@$(DOCKER_COMPOSE) exec app bash
+
+migrate: ## Выполнить миграции
+	@$(DOCKER_COMPOSE) exec -T app php artisan migrate
+	@echo "✅ Миграции выполнены"
+
+fresh: ## Выполнить свежие миграции (с удалением данных)
+	@$(DOCKER_COMPOSE) exec -T app php artisan migrate:fresh
+	@echo "✅ Свежие миграции выполнены"
+
+clean: ## Очистить кэш и логи
+	@$(DOCKER_COMPOSE) exec -T app php artisan cache:clear
+	@$(DOCKER_COMPOSE) exec -T app php artisan config:clear
+	@$(DOCKER_COMPOSE) exec -T app php artisan route:clear
+	@$(DOCKER_COMPOSE) exec -T app php artisan view:clear
+	@echo "✅ Кэш очищен"
+
+install: build ## Алиас для build (для совместимости)
+	@echo "✅ Установка завершена"
+

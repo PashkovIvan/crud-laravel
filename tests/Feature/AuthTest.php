@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Domain\User\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -46,7 +45,7 @@ class AuthTest extends TestCase
         
         $user = User::factory()->create([
             'email' => $email,
-            'password' => Hash::make($password),
+            'password' => $password,
         ]);
 
         $loginData = [
@@ -101,7 +100,7 @@ class AuthTest extends TestCase
         
         $user = User::factory()->create([
             'email' => $email,
-            'password' => Hash::make('password123'),
+            'password' => 'password123',
         ]);
 
         $loginData = [
