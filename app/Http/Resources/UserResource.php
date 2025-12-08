@@ -14,9 +14,7 @@ class UserResource extends JsonResource
             'id' => IdHelper::encrypt($this->id),
             'name' => $this->name,
             'email' => $this->email,
-            'roles' => $this->whenLoaded('roles', function () {
-                return $this->roles->pluck('name');
-            }),
+            'roles' => $this->whenLoaded('roles', fn() => $this->roles->pluck('name')),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

@@ -30,6 +30,7 @@ class NotificationController extends Controller
             $perPage = $validated['per_page'] ?? PaginationConstants::DEFAULT_PER_PAGE;
             
             $notifications = $this->notificationService->getByUser($request->user(), $perPage);
+
             return $this->paginatedResponse($notifications, NotificationResource::class);
         } catch (Throwable $e) {
             return $this->handleException($e, 'Notification listing');
@@ -41,7 +42,7 @@ class NotificationController extends Controller
         try {
             $dto = CreateNotificationDTO::fromArray($request->validated(), $request->user()->id);
             $notification = $this->notificationService->create($dto);
-            
+
             return $this->successResponse(
                 new NotificationResource($notification),
                 SuccessMessage::NOTIFICATION_CREATED->value,
@@ -56,9 +57,9 @@ class NotificationController extends Controller
     {
         try {
             $this->authorize('update', $notification);
-            
+
             $notification = $this->notificationService->markAsRead($notification);
-            
+
             return $this->successResponse(
                 new NotificationResource($notification),
                 SuccessMessage::NOTIFICATION_READ->value
@@ -74,7 +75,7 @@ class NotificationController extends Controller
     {
         try {
             $count = $this->notificationService->markAllAsRead($request->user());
-            
+
             return $this->successResponse(
                 ['count' => $count],
                 SuccessMessage::NOTIFICATIONS_ALL_READ->value
@@ -88,7 +89,7 @@ class NotificationController extends Controller
     {
         try {
             $count = $this->notificationService->getUnreadCount($request->user());
-            
+
             return $this->successResponse(['unread_count' => $count]);
         } catch (Throwable $e) {
             return $this->handleException($e, 'Get unread count');

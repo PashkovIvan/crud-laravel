@@ -18,14 +18,15 @@ class ExistsEncryptedId implements ValidationRule
     {
         if (!is_string($value)) {
             $fail('Поле :attribute должно быть строкой.');
+
             return;
         }
 
         try {
             $decryptedId = IdHelper::decrypt($value);
-            
+
             $exists = $this->model::where($this->column, $decryptedId)->exists();
-            
+
             if (!$exists) {
                 $fail('Выбранный :attribute не существует.');
             }

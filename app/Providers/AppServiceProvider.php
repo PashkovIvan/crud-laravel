@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
         Route::bind('task', function (string $value) {
             try {
                 $decryptedId = IdHelper::decrypt($value);
+
                 return Task::findOrFail($decryptedId);
             } catch (InvalidArgumentException $e) {
                 return Task::findOrFail($value);
@@ -35,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Route::bind('notification', function (string $value) {
             try {
                 $decryptedId = IdHelper::decrypt($value);
+
                 return Notification::findOrFail($decryptedId);
             } catch (InvalidArgumentException $e) {
                 return Notification::findOrFail($value);

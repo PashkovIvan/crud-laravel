@@ -25,6 +25,7 @@ class NotificationService
     public function markAsRead(Notification $notification): Notification
     {
         $notification->markAsRead();
+
         return $notification->fresh();
     }
 

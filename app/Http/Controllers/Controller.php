@@ -39,9 +39,18 @@ abstract class Controller
 
     protected function handleException(Throwable $e, string $context = 'Operation'): JsonResponse
     {
+        $request = request();
+
         Log::error("{$context} failed", [
             'message' => $e->getMessage(),
+            'exception' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
             'trace' => $e->getTraceAsString(),
+            'user_id' => $request->user()?->id,
+            'request_method' => $request->method(),
+            'request_url' => $request->fullUrl(),
+            'request_data' => $request->except(['password', 'password_confirmation']),
         ]);
 
         $message = app()->environment('production')

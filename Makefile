@@ -89,6 +89,10 @@ clean: ## Очистить кэш и логи
 	@$(DOCKER_COMPOSE) exec -T app php artisan view:clear
 	@echo "✅ Кэш очищен"
 
+cache-clear: ## Очистить весь кэш приложения (включая Redis)
+	@$(DOCKER_COMPOSE) exec -T app php artisan cache:clear-all
+	@echo "✅ Весь кэш очищен"
+
 install: build ## Алиас для build (для совместимости)
 	@echo "✅ Установка завершена"
 

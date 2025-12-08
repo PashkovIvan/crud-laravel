@@ -23,9 +23,7 @@ class TaskResource extends JsonResource
             'priority_label' => $this->priority->label(),
             'due_date' => $this->due_date?->toISOString(),
             'user' => new UserResource($this->user),
-            'assigned_user' => $this->when($this->assignedUser, function () {
-                return new UserResource($this->assignedUser);
-            }),
+            'assigned_user' => $this->when($this->assignedUser, fn() => new UserResource($this->assignedUser)),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

@@ -34,6 +34,7 @@ class TaskController extends Controller
             $perPage = $validated['per_page'] ?? PaginationConstants::DEFAULT_PER_PAGE;
             
             $tasks = $this->taskService->getAll($perPage);
+
             return $this->paginatedResponse($tasks, TaskResource::class);
         } catch (Throwable $e) {
             return $this->handleException($e, 'Task listing');
@@ -45,7 +46,7 @@ class TaskController extends Controller
         try {
             $dto = CreateTaskDTO::fromArray($request->validated(), $request->user()->id);
             $task = $this->taskService->create($dto);
-            
+
             return $this->successResponse(
                 new TaskResource($task),
                 SuccessMessage::TASK_CREATED->value,
@@ -60,7 +61,7 @@ class TaskController extends Controller
     {
         try {
             $task->load(['user', 'assignedUser']);
-            
+
             return $this->successResponse(new TaskResource($task));
         } catch (Throwable $e) {
             return $this->handleException($e, 'Task retrieval');
@@ -72,7 +73,7 @@ class TaskController extends Controller
         try {
             $dto = UpdateTaskDTO::fromArray($request->validated());
             $task = $this->taskService->update($task, $dto);
-            
+
             return $this->successResponse(
                 new TaskResource($task),
                 SuccessMessage::TASK_UPDATED->value
@@ -86,7 +87,7 @@ class TaskController extends Controller
     {
         try {
             $this->taskService->delete($task);
-            
+
             return response()->json(null, 204);
         } catch (Throwable $e) {
             return $this->handleException($e, 'Task deletion');
@@ -97,7 +98,7 @@ class TaskController extends Controller
     {
         try {
             $task = $this->taskService->markAsCompleted($task);
-            
+
             return $this->successResponse(
                 new TaskResource($task),
                 SuccessMessage::TASK_COMPLETED->value
@@ -111,7 +112,7 @@ class TaskController extends Controller
     {
         try {
             $task = $this->taskService->markAsInProgress($task);
-            
+
             return $this->successResponse(
                 new TaskResource($task),
                 SuccessMessage::TASK_IN_PROGRESS->value
@@ -125,7 +126,7 @@ class TaskController extends Controller
     {
         try {
             $task = $this->taskService->markAsPending($task);
-            
+
             return $this->successResponse(
                 new TaskResource($task),
                 SuccessMessage::TASK_PENDING->value
@@ -143,7 +144,7 @@ class TaskController extends Controller
             $userId = IdHelper::decrypt($validated['user_id']);
             $user = User::findOrFail($userId);
             $task = $this->taskService->assignToUser($task, $user);
-            
+
             return $this->successResponse(
                 new TaskResource($task),
                 SuccessMessage::TASK_ASSIGNED->value

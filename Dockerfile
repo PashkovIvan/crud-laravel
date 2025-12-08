@@ -13,6 +13,13 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip
 
+# Установка расширения Redis
+RUN apt-get install -y $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apt-get remove -y $PHPIZE_DEPS \
+    && apt-get autoremove -y
+
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
