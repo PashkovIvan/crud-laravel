@@ -5,6 +5,7 @@ namespace App\Domain\Task\Models;
 use App\Domain\Task\Enums\TaskPriority;
 use App\Domain\Task\Enums\TaskStatus;
 use App\Domain\User\Models\User;
+use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,11 @@ class Task extends Model
             'priority' => TaskPriority::class,
             'due_date' => 'datetime',
         ];
+    }
+
+    protected static function newFactory()
+    {
+        return TaskFactory::new();
     }
 
     public function user(): BelongsTo

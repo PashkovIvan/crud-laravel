@@ -22,8 +22,8 @@ class NoXss implements ValidationRule
         }
 
         $xssPatterns = [
-            '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi',
-            '/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi',
+            '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i',
+            '/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/i',
             '/javascript:/i',
             '/on\w+\s*=/i',
             '/<img[^>]+src[^>]*=.*javascript:/i',

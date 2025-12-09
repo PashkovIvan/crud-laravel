@@ -2,27 +2,18 @@
 
 namespace Database\Factories;
 
+use App\Domain\User\Enums\UserRole;
 use App\Domain\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domain\User\Models\User>
- */
 class UserFactory extends Factory
 {
     protected $model = User::class;
 
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -34,13 +25,34 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = Role::firstOrCreate(['name' => UserRole::ADMIN->value, 'guard_name' => 'web']);
+            $user->assignRole($role);
+        });
+    }
+
+    public function manager(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = Role::firstOrCreate(['name' => UserRole::MANAGER->value, 'guard_name' => 'web']);
+            $user->assignRole($role);
+        });
+    }
+
+    public function user(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = Role::firstOrCreate(['name' => UserRole::USER->value, 'guard_name' => 'web']);
+            $user->assignRole($role);
+        });
     }
 }

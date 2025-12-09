@@ -64,9 +64,15 @@ else
     TEST_RESULT=1
 fi
 
-# Показываем логи
-echo -e "\n${YELLOW}Последние записи лога:${NC}"
-$DOCKER_COMPOSE exec -T app tail -n 20 storage/logs/laravel.log 2>/dev/null || echo "Логи недоступны"
+# Показываем логи Laravel (больше строк при ошибках)
+echo -e "\n${YELLOW}Последние записи лога Laravel:${NC}"
+if [ $TEST_RESULT -ne 0 ]; then
+    echo -e "${YELLOW}Показываем последние 100 строк лога (ошибки):${NC}"
+    $DOCKER_COMPOSE exec -T app tail -n 100 storage/logs/laravel.log 2>/dev/null || echo "Логи недоступны"
+else
+    echo -e "${YELLOW}Показываем последние 30 строк лога:${NC}"
+    $DOCKER_COMPOSE exec -T app tail -n 30 storage/logs/laravel.log 2>/dev/null || echo "Логи недоступны"
+fi
 
 echo -e "\n${YELLOW}Полезные команды:${NC}"
 echo -e "Для просмотра полных логов:"

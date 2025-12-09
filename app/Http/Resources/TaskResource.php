@@ -21,11 +21,11 @@ class TaskResource extends JsonResource
             'status_label' => $this->status->label(),
             'priority' => $this->priority->value,
             'priority_label' => $this->priority->label(),
-            'due_date' => $this->due_date?->toISOString(),
+            'due_date' => $this->due_date?->format('c'),
             'user' => new UserResource($this->user),
             'assigned_user' => $this->when($this->assignedUser, fn() => new UserResource($this->assignedUser)),
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
+            'created_at' => $this->created_at->format('c'),
+            'updated_at' => $this->updated_at->format('c'),
         ];
     }
 }

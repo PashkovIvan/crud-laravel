@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Common\Enums\ErrorMessage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 abstract class Controller
 {
+    use AuthorizesRequests;
+
     protected function successResponse(mixed $data = null, ?string $message = null, int $status = 200): JsonResponse
     {
         $response = [];

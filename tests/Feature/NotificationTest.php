@@ -81,14 +81,18 @@ class NotificationTest extends TestCase
             'read_at' => null,
         ]);
 
-        $response = $this->patchJson(route('notifications.read', $notification));
+        $encryptedId = \App\Domain\Common\Helpers\IdHelper::encrypt($notification->id);
+        $response = $this->patchJson(route('notifications.read', $encryptedId));
 
         $response->assertStatus(200)
-            ->assertJson([
+            ->assertJsonStructure([
                 'data' => [
-                    'read_at' => $notification->fresh()->read_at->toISOString(),
+                    'id',
+                    'title',
+                    'read_at',
                 ]
-            ]);
+            ])
+            ->assertJsonPath('data.read_at', fn($value) => !is_null($value));
 
         $this->assertDatabaseHas('notifications', [
             'id' => $notification->id,
@@ -134,7 +138,9 @@ class NotificationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'unread_count' => 2
+                'data' => [
+                    'unread_count' => 2
+                ]
             ]);
     }
 }

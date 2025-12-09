@@ -16,10 +16,10 @@ class NotificationResource extends JsonResource
             'message' => $this->message,
             'type' => $this->type->value,
             'type_label' => $this->type->label(),
-            'read_at' => $this->read_at?->toISOString(),
-            'data' => $this->data,
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
+            'read_at' => $this->read_at?->format('c'),
+            'data' => $this->when($this->data !== null, fn() => $this->data),
+            'created_at' => $this->created_at->format('c'),
+            'updated_at' => $this->updated_at->format('c'),
         ];
     }
 }

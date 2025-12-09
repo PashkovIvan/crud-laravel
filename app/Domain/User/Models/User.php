@@ -5,6 +5,7 @@ namespace App\Domain\User\Models;
 use App\Domain\Notification\Models\Notification;
 use App\Domain\Task\Models\Task;
 use App\Domain\User\Enums\UserRole;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -35,6 +36,11 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function newFactory()
+    {
+        return UserFactory::new();
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
@@ -52,11 +58,11 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->hasRole(UserRole::ADMIN->value);
+        return $this->hasRole(UserRole::ADMIN->value, 'web');
     }
 
     public function isManager(): bool
     {
-        return $this->hasRole(UserRole::MANAGER->value);
+        return $this->hasRole(UserRole::MANAGER->value, 'web');
     }
 }

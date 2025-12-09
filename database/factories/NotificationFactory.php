@@ -19,7 +19,7 @@ class NotificationFactory extends Factory
             'type' => fake()->randomElement(NotificationType::cases()),
             'read_at' => fake()->optional()->dateTime(),
             'user_id' => User::factory(),
-            'data' => fake()->optional()->array(),
+            'data' => fake()->optional(0.5)->passthrough(['key' => fake()->word(), 'value' => fake()->word()]),
         ];
     }
 

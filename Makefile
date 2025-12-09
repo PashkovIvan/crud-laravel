@@ -73,7 +73,7 @@ test: ## Запустить тесты
 	@$(DOCKER_COMPOSE) exec -T app truncate -s 0 storage/logs/laravel.log 2>/dev/null || \
 	$(DOCKER_COMPOSE) exec -T app sh -c "echo '' > storage/logs/laravel.log" 2>/dev/null || true
 	@echo "🧪 Запуск тестов..."
-	@$(DOCKER_COMPOSE) exec -T app php artisan test || (echo "❌ Некоторые тесты не прошли" && exit 1)
+	@$(DOCKER_COMPOSE) exec -T app php artisan test || (echo "❌ Некоторые тесты не прошли" && echo "" && echo "📋 Последние записи лога Laravel:" && $(DOCKER_COMPOSE) exec -T app tail -n 50 storage/logs/laravel.log 2>/dev/null || echo "Логи недоступны" && echo "" && exit 1)
 	@echo "✅ Все тесты прошли успешно"
 
 logs: ## Показать логи приложения

@@ -20,7 +20,7 @@ class TaskTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->admin()->create();
         Sanctum::actingAs($this->user);
     }
 
@@ -41,7 +41,6 @@ class TaskTest extends TestCase
                         'priority',
                         'due_date',
                         'user',
-                        'assigned_user',
                         'created_at',
                         'updated_at',
                     ]
@@ -209,18 +208,20 @@ class TaskTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'tasks' => [
-                    'total',
-                    TaskStatus::COMPLETED->value,
-                    TaskStatus::IN_PROGRESS->value,
-                    TaskStatus::PENDING->value,
-                    'overdue',
-                ],
-                'users' => [
-                    'total',
-                    'active',
-                ],
-                'recent_tasks'
+                'data' => [
+                    'tasks' => [
+                        'total',
+                        TaskStatus::COMPLETED->value,
+                        TaskStatus::IN_PROGRESS->value,
+                        TaskStatus::PENDING->value,
+                        'overdue',
+                    ],
+                    'users' => [
+                        'total',
+                        'active',
+                    ],
+                    'recent_tasks'
+                ]
             ]);
     }
 
@@ -234,15 +235,19 @@ class TaskTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJson([
+            ->assertJsonStructure([
                 'data' => [
+                    'id',
+                    'title',
                     'assigned_user' => [
-                        'id' => IdHelper::encrypt($assignedUser->id),
-                        'name' => $assignedUser->name,
-                        'email' => $assignedUser->email,
+                        'id',
+                        'name',
+                        'email',
                     ]
                 ]
-            ]);
+            ])
+            ->assertJsonPath('data.assigned_user.name', $assignedUser->name)
+            ->assertJsonPath('data.assigned_user.email', $assignedUser->email);
 
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,

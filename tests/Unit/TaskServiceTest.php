@@ -167,7 +167,7 @@ class TaskServiceTest extends TestCase
 
     public function test_can_get_statistics(): void
     {
-        Task::factory()->count(5)->create();
+        Task::factory()->pending()->count(5)->create();
         Task::factory()->completed()->count(3)->create();
         Task::factory()->inProgress()->count(2)->create();
 
