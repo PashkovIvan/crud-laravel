@@ -30,9 +30,11 @@ class AuthTest extends TestCase
                         'email',
                         'created_at',
                     ],
-                    'token'
+                    'token',
+                    'motivation_message'
                 ]
-            ]);
+            ])
+            ->assertJsonPath('data.motivation_message', fn($value) => is_string($value) && !empty($value));
 
         $this->assertDatabaseHas('users', [
             'name' => $userData['name'],
@@ -65,9 +67,11 @@ class AuthTest extends TestCase
                         'name',
                         'email',
                     ],
-                    'token'
+                    'token',
+                    'motivation_message'
                 ]
-            ]);
+            ])
+            ->assertJsonPath('data.motivation_message', fn($value) => is_string($value) && !empty($value));
     }
 
     public function test_user_can_logout(): void

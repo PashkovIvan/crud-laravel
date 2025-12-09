@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Domain\Common\Constants\AuthConstants;
 use App\Domain\Common\Enums\ErrorMessage;
 use App\Domain\Common\Enums\SuccessMessage;
+use App\Domain\Motivation\Services\MotivationService;
 use App\Domain\User\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
@@ -17,6 +18,10 @@ use Throwable;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private MotivationService $motivationService
+    ) {}
+
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
@@ -30,10 +35,13 @@ class AuthController extends Controller
 
             $token = $user->createToken(AuthConstants::TOKEN_NAME)->plainTextToken;
 
+            $motivationMessage = $this->motivationService->generateMessage();
+
             return $this->successResponse(
                 [
                     'user' => new UserResource($user),
                     'token' => $token,
+                    'motivation_message' => $motivationMessage,
                 ],
                 SuccessMessage::REGISTRATION_SUCCESS->value,
                 201
@@ -56,10 +64,13 @@ class AuthController extends Controller
 
             $token = $user->createToken(AuthConstants::TOKEN_NAME)->plainTextToken;
 
+            $motivationMessage = $this->motivationService->generateMessage();
+
             return $this->successResponse(
                 [
                     'user' => new UserResource($user),
                     'token' => $token,
+                    'motivation_message' => $motivationMessage,
                 ],
                 SuccessMessage::LOGIN_SUCCESS->value
             );

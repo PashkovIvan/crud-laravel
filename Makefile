@@ -41,6 +41,24 @@ build: ## Собрать и запустить проект (первая уст
 	@$(DOCKER_COMPOSE) exec -T app php artisan config:clear
 	@$(DOCKER_COMPOSE) exec -T app php artisan route:clear
 	@$(DOCKER_COMPOSE) exec -T app php artisan view:clear
+	@echo "⏳ Ожидание готовности Ollama..."
+	@TIMEOUT=60; \
+	ELAPSED=0; \
+	while ! $(DOCKER_COMPOSE) exec -T ollama ollama list > /dev/null 2>&1; do \
+		if [ $$ELAPSED -ge $$TIMEOUT ]; then \
+			echo "⚠️  Таймаут ожидания готовности Ollama ($$TIMEOUT секунд)"; \
+			echo "⚠️  Модель не загружена. Вы можете загрузить ее позже командой: make ollama-setup"; \
+			break; \
+		fi; \
+		sleep 2; \
+		ELAPSED=$$((ELAPSED + 2)); \
+		echo "   Ожидание готовности Ollama... ($$ELAPSED/$$TIMEOUT секунд)"; \
+	done; \
+	if [ $$ELAPSED -lt $$TIMEOUT ]; then \
+		echo "✅ Ollama готов"; \
+		echo "📥 Загрузка модели llama3.2 (это может занять несколько минут)..."; \
+		$(DOCKER_COMPOSE) exec -T ollama ollama pull llama3.2 && echo "✅ Модель успешно загружена!" || echo "⚠️  Не удалось загрузить модель. Вы можете сделать это позже командой: make ollama-setup"; \
+	fi
 	@echo "✨ Установка завершена!"
 	@echo "🌐 Проект доступен по адресу: http://localhost:8080"
 
@@ -111,5 +129,22 @@ cache-clear: ## Очистить весь кэш приложения (вклю�
 	@echo "✅ Весь кэш очищен"
 
 install: build ## Алиас для build (для совместимости)
-	@echo "✅ Установка завершена"
+
+ollama-setup: ## Настроить Ollama (загрузить модель)
+	@echo "⏳ Проверка готовности Ollama..."
+	@TIMEOUT=30; \
+	ELAPSED=0; \
+	while ! $(DOCKER_COMPOSE) exec -T ollama ollama list > /dev/null 2>&1; do \
+		if [ $$ELAPSED -ge $$TIMEOUT ]; then \
+			echo "❌ Ollama не доступен. Убедитесь, что контейнер запущен: make up"; \
+			exit 1; \
+		fi; \
+		sleep 2; \
+		ELAPSED=$$((ELAPSED + 2)); \
+		echo "   Ожидание... ($$ELAPSED/$$TIMEOUT секунд)"; \
+	done
+	@echo "✅ Ollama готов"
+	@echo "📥 Загрузка модели llama3.2 (это может занять несколько минут)..."
+	@$(DOCKER_COMPOSE) exec -T ollama ollama pull llama3.2
+	@echo "✅ Модель успешно загружена!"
 

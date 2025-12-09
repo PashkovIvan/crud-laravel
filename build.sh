@@ -76,10 +76,37 @@ docker-compose exec -T app php artisan config:clear
 docker-compose exec -T app php artisan route:clear
 docker-compose exec -T app php artisan view:clear
 
+# Ожидание готовности Ollama и загрузка модели
+echo "⏳ Ожидание готовности Ollama..."
+TIMEOUT=60
+ELAPSED=0
+
+while ! docker-compose exec -T ollama ollama list > /dev/null 2>&1; do
+    if [ $ELAPSED -ge $TIMEOUT ]; then
+        echo "⚠️  Таймаут ожидания готовности Ollama (${TIMEOUT} секунд)"
+        echo "⚠️  Модель не загружена. Вы можете загрузить ее позже командой: docker-compose exec ollama ollama pull llama3.2"
+        break
+    fi
+    sleep 2
+    ELAPSED=$((ELAPSED + 2))
+    echo "   Ожидание готовности Ollama... (${ELAPSED}/${TIMEOUT} секунд)"
+done
+
+if [ $ELAPSED -lt $TIMEOUT ]; then
+    echo "✅ Ollama готов"
+    echo "📥 Загрузка модели llama3.2 (это может занять несколько минут)..."
+    if docker-compose exec -T ollama ollama pull llama3.2; then
+        echo "✅ Модель успешно загружена!"
+    else
+        echo "⚠️  Не удалось загрузить модель. Вы можете сделать это позже командой: docker-compose exec ollama ollama pull llama3.2"
+    fi
+fi
+
 echo "✨ Установка завершена!"
 echo "🌐 Проект доступен по адресу: http://localhost:8080"
 echo "🐘 PostgreSQL доступен на порту: 5432"
 echo "📊 Redis доступен на порту: 6379"
+echo "🤖 Ollama доступен на порту: 11434"
 echo ""
 echo "📋 Полезные команды:"
 echo ""
@@ -92,6 +119,9 @@ echo "Для запуска тестов:"
 echo "  ./test.sh"
 echo "  или"
 echo "  docker-compose exec -T app php artisan test"
+echo ""
+echo "Для настройки Ollama (если модель не загрузилась):"
+echo "  docker-compose exec ollama ollama pull llama3.2"
 echo ""
 echo "Для входа в контейнер:"
 echo "  docker-compose exec app bash"

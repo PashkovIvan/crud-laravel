@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Domain\Common\Helpers\IdHelper;
+use App\Domain\Motivation\Contracts\MotivationProviderInterface;
+use App\Domain\Motivation\Providers\OllamaMotivationProvider;
 use App\Domain\Notification\Models\Notification;
 use App\Domain\Task\Models\Task;
 use App\Policies\NotificationPolicy;
@@ -15,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Регистрация сервисов контейнера, если необходимо
+        $this->app->singleton(MotivationProviderInterface::class, function ($app) {
+            return new OllamaMotivationProvider();
+        });
     }
 
     public function boot(): void
