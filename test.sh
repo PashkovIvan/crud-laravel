@@ -10,14 +10,37 @@ echo -e "${YELLOW}🚀 Начинаем тестирование Task Manager...
 
 # Проверяем, запущены ли все сервисы
 echo -e "\n${YELLOW}Проверка статуса сервисов...${NC}"
-if ! docker-compose ps | grep -q "app.*running"; then
+
+# Проверка наличия Docker Compose
+if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    echo -e "${RED}❌ Docker Compose не установлен${NC}"
+    exit 1
+fi
+
+# Определение команды docker-compose
+DOCKER_COMPOSE="docker-compose"
+if ! command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+fi
+
+# Проверка контейнера приложения
+if ! $DOCKER_COMPOSE ps app 2>/dev/null | grep -qE "(Up|running)"; then
     echo -e "${RED}❌ Приложение не запущено${NC}"
+    echo ""
+    echo "Текущий статус контейнеров:"
+    $DOCKER_COMPOSE ps 2>/dev/null || echo "Не удалось получить статус контейнеров"
+    echo ""
     echo "Запустите проект командой: ./build.sh"
     exit 1
 fi
 
-if ! docker-compose ps | grep -q "db.*running"; then
+# Проверка контейнера базы данных
+if ! $DOCKER_COMPOSE ps db 2>/dev/null | grep -qE "(Up|running)"; then
     echo -e "${RED}❌ PostgreSQL не запущен${NC}"
+    echo ""
+    echo "Текущий статус контейнеров:"
+    $DOCKER_COMPOSE ps 2>/dev/null || echo "Не удалось получить статус контейнеров"
+    echo ""
     echo "Запустите проект командой: ./build.sh"
     exit 1
 fi
@@ -26,14 +49,14 @@ echo -e "${GREEN}✓ Все сервисы запущены${NC}"
 
 # Очищаем логи
 echo -e "\n${YELLOW}Очистка логов...${NC}"
-docker-compose exec -T app truncate -s 0 storage/logs/laravel.log 2>/dev/null || \
-docker-compose exec -T app sh -c "echo '' > storage/logs/laravel.log" 2>/dev/null || \
+$DOCKER_COMPOSE exec -T app truncate -s 0 storage/logs/laravel.log 2>/dev/null || \
+$DOCKER_COMPOSE exec -T app sh -c "echo '' > storage/logs/laravel.log" 2>/dev/null || \
 echo "⚠️  Не удалось очистить логи"
 echo -e "${GREEN}✓ Логи очищены${NC}"
 
 # Запускаем тесты
 echo -e "\n${YELLOW}Запуск тестов...${NC}"
-if docker-compose exec -T app php artisan test; then
+if $DOCKER_COMPOSE exec -T app php artisan test; then
     echo -e "\n${GREEN}✅ Все тесты прошли успешно${NC}"
     TEST_RESULT=0
 else
@@ -43,10 +66,15 @@ fi
 
 # Показываем логи
 echo -e "\n${YELLOW}Последние записи лога:${NC}"
-docker-compose exec -T app tail -n 20 storage/logs/laravel.log 2>/dev/null || echo "Логи недоступны"
+$DOCKER_COMPOSE exec -T app tail -n 20 storage/logs/laravel.log 2>/dev/null || echo "Логи недоступны"
 
-echo -e "\n${YELLOW}Для просмотра полных логов выполните:${NC}"
-echo "docker-compose exec app tail -f storage/logs/laravel.log"
+echo -e "\n${YELLOW}Полезные команды:${NC}"
+echo -e "Для просмотра полных логов:"
+echo "  $DOCKER_COMPOSE exec app tail -f storage/logs/laravel.log"
+echo -e "\nДля повторного запуска тестов:"
+echo "  ./test.sh"
+echo "  или"
+echo "  $DOCKER_COMPOSE exec -T app php artisan test"
 
 exit $TEST_RESULT
 

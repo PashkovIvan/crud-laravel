@@ -6,41 +6,48 @@ use App\Domain\Common\Helpers\IdHelper;
 use App\Domain\Notification\Models\Notification;
 use App\Domain\Task\Models\Task;
 use App\Policies\NotificationPolicy;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
 
 class AppServiceProvider extends ServiceProvider
 {
-    protected $policies = [
-        Notification::class => NotificationPolicy::class,
-    ];
-
     public function register(): void
     {
-        //
+        // Регистрация сервисов контейнера, если необходимо
     }
 
     public function boot(): void
     {
-        Route::bind('task', function (string $value) {
-            try {
-                $decryptedId = IdHelper::decrypt($value);
+        // Регистрация политик
+        Gate::policy(Notification::class, NotificationPolicy::class);
 
-                return Task::findOrFail($decryptedId);
-            } catch (InvalidArgumentException $e) {
-                return Task::findOrFail($value);
-            }
-        });
+        // Route model bindings
+        Route::bind('task', fn(string $value) => $this->resolveTask($value));
 
-        Route::bind('notification', function (string $value) {
-            try {
-                $decryptedId = IdHelper::decrypt($value);
+        Route::bind('notification', fn(string $value) => $this->resolveNotification($value));
+    }
 
-                return Notification::findOrFail($decryptedId);
-            } catch (InvalidArgumentException $e) {
-                return Notification::findOrFail($value);
-            }
-        });
+    private function resolveTask(string $value): Task
+    {
+        try {
+            $decryptedId = IdHelper::decrypt($value);
+
+            return Task::findOrFail($decryptedId);
+        } catch (InvalidArgumentException $e) {
+            return Task::findOrFail($value);
+        }
+    }
+
+    private function resolveNotification(string $value): Notification
+    {
+        try {
+            $decryptedId = IdHelper::decrypt($value);
+
+            return Notification::findOrFail($decryptedId);
+        } catch (InvalidArgumentException $e) {
+            return Notification::findOrFail($value);
+        }
     }
 }
