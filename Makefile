@@ -1,7 +1,7 @@
 # Определение команды docker-compose (поддержка старой и новой версии)
 DOCKER_COMPOSE := $(shell which docker-compose 2>/dev/null || echo "docker compose")
 
-.PHONY: help build rebuild test up down logs shell migrate fresh clean install
+.PHONY: help build rebuild test up down logs logs-follow logs-all shell migrate fresh clean install cache-clear
 
 help: ## Показать справку по командам
 	@echo "Доступные команды:"
@@ -18,8 +18,16 @@ build: ## Собрать и запустить проект (первая уст
 	@echo "🏗️  Сборка и запуск контейнеров..."
 	@$(DOCKER_COMPOSE) up -d --build
 	@echo "⏳ Ожидание готовности PostgreSQL..."
-	@until $(DOCKER_COMPOSE) exec -T db pg_isready -U task_user > /dev/null 2>&1; do \
+	@TIMEOUT=60; \
+	ELAPSED=0; \
+	while ! $(DOCKER_COMPOSE) exec -T db pg_isready -U task_user > /dev/null 2>&1; do \
+		if [ $$ELAPSED -ge $$TIMEOUT ]; then \
+			echo "❌ Таймаут ожидания готовности PostgreSQL ($$TIMEOUT секунд)"; \
+			exit 1; \
+		fi; \
 		sleep 2; \
+		ELAPSED=$$((ELAPSED + 2)); \
+		echo "   Ожидание... ($$ELAPSED/$$TIMEOUT секунд)"; \
 	done
 	@echo "✅ PostgreSQL готов"
 	@echo "📦 Установка зависимостей Composer..."
@@ -69,7 +77,16 @@ test: ## Запустить тесты
 	@echo "✅ Все тесты прошли успешно"
 
 logs: ## Показать логи приложения
-	@$(DOCKER_COMPOSE) logs -f app
+	@echo "📋 Логи приложения:"
+	@$(DOCKER_COMPOSE) logs --tail=100 app
+
+logs-follow: ## Показать последние 30 логов и следить в реальном времени
+	@echo "📋 Логи приложения (последние 30 строк, режим слежения):"
+	@$(DOCKER_COMPOSE) logs --tail=30 -f app
+
+logs-all: ## Показать логи всех сервисов
+	@echo "📋 Логи всех сервисов:"
+	@$(DOCKER_COMPOSE) logs --tail=100
 
 shell: ## Войти в контейнер приложения
 	@$(DOCKER_COMPOSE) exec app bash

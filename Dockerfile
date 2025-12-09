@@ -27,23 +27,29 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
 
-# Копирование существующих прав доступа из хоста
-COPY --chown=www:www . /var/www
-
-# Переключение на пользователя www
-USER www
-
 # Установка рабочей директории
 WORKDIR /var/www
 
-# Копирование composer файлов
-COPY --chown=www:www composer.json composer.lock ./
+# Копирование composer файлов (для кэширования слоя зависимостей)
+COPY --chown=root:root composer.json ./
 
-# Установка зависимостей PHP
-RUN composer install --optimize-autoloader
+# Установка зависимостей PHP (от root для создания composer.lock, без скриптов, т.к. artisan еще не скопирован)
+RUN composer install --optimize-autoloader --no-interaction --no-scripts
+
+# Изменение владельца файлов на www:www
+RUN chown -R www:www /var/www
 
 # Копирование остальных файлов
 COPY --chown=www:www . .
+
+# Выполнение скриптов Composer после копирования всех файлов
+RUN composer dump-autoload --optimize --no-interaction
+
+# Изменение владельца всех файлов на www:www
+RUN chown -R www:www /var/www
+
+# Переключение на пользователя www
+USER www
 
 # Открытие порта
 EXPOSE 9000

@@ -32,8 +32,16 @@ docker-compose up -d --build
 
 # Ожидание готовности базы данных
 echo "⏳ Ожидание готовности PostgreSQL..."
-until docker-compose exec -T db pg_isready -U task_user; do
+TIMEOUT=60
+ELAPSED=0
+while ! docker-compose exec -T db pg_isready -U task_user > /dev/null 2>&1; do
+    if [ $ELAPSED -ge $TIMEOUT ]; then
+        echo "❌ Таймаут ожидания готовности PostgreSQL (${TIMEOUT} секунд)"
+        exit 1
+    fi
     sleep 2
+    ELAPSED=$((ELAPSED + 2))
+    echo "   Ожидание... (${ELAPSED}/${TIMEOUT} секунд)"
 done
 echo "✅ PostgreSQL готов"
 
