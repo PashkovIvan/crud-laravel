@@ -20,7 +20,8 @@ class DashboardController extends Controller
     {
         try {
             $taskStats = $this->taskService->getStatistics();
-            
+
+            // problem: mb cache?
             $userStats = [
                 'total' => User::count(),
                 'active' => User::whereHas('tasks')->count(),

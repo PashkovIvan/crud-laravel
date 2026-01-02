@@ -2,6 +2,7 @@
 
 namespace App\Domain\Common\Constants;
 
+// problem: type hints?
 class PaginationConstants
 {
     public const DEFAULT_PER_PAGE = 15;

@@ -32,7 +32,7 @@ class TaskController extends Controller
         try {
             $validated = $request->validated();
             $perPage = $validated['per_page'] ?? PaginationConstants::DEFAULT_PER_PAGE;
-            
+
             $tasks = $this->taskService->getAll($perPage);
 
             return $this->paginatedResponse($tasks, TaskResource::class);
@@ -96,6 +96,7 @@ class TaskController extends Controller
 
     public function markCompleted(Task $task): JsonResponse
     {
+        // problem: duble (markCompleted, markInProgress, markPending)
         try {
             $task = $this->taskService->markAsCompleted($task);
 
@@ -138,9 +139,14 @@ class TaskController extends Controller
 
     public function assign(AssignTaskRequest $request, Task $task): JsonResponse
     {
+        /**
+         * problem:
+         * 1. декрипт в контроллере - грязновато
+         * 2. findOrFail кажется нарушает слой сервиса
+         */
         try {
             $validated = $request->validated();
-            
+
             $userId = IdHelper::decrypt($validated['user_id']);
             $user = User::findOrFail($userId);
             $task = $this->taskService->assignToUser($task, $user);

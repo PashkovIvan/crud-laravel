@@ -25,6 +25,7 @@ class ExistsEncryptedId implements ValidationRule
         try {
             $decryptedId = IdHelper::decrypt($value);
 
+            // problem: можно любую модель прокинуть сюда
             $exists = $this->model::where($this->column, $decryptedId)->exists();
 
             if (!$exists) {

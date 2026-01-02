@@ -4,6 +4,7 @@ namespace App\Domain\Motivation\Enums;
 
 use App\Domain\Common\Traits\HasEnumValues;
 
+// problem: возможно знает слишком много
 enum MotivationType: string
 {
     use HasEnumValues;

@@ -1,6 +1,7 @@
 FROM php:8.4-fpm
 
 # Установка системных зависимостей
+# problem: а точно ли все пакеты эти нужны тебе?
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -21,6 +22,7 @@ RUN apt-get install -y $PHPIZE_DEPS \
     && apt-get autoremove -y
 
 # Установка Composer
+# problem: latest - ловушка (вспомни php-клуб, где php 8.5 включилась таким образом)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Создание пользователя для приложения
@@ -31,9 +33,11 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 WORKDIR /var/www
 
 # Копирование composer файлов (для кэширования слоя зависимостей)
+# problem: а может composer.lock лучше скопировать для выполнения composer install?
 COPY --chown=root:root composer.json ./
 
 # Установка зависимостей PHP (от root для создания composer.lock, без скриптов, т.к. artisan еще не скопирован)
+# problem: я бы добавил еще --no-dev
 RUN composer install --optimize-autoloader --no-interaction --no-scripts
 
 # Изменение владельца файлов на www:www
@@ -46,6 +50,7 @@ COPY --chown=www:www . .
 RUN composer dump-autoload --optimize --no-interaction
 
 # Изменение владельца всех файлов на www:www
+# problem: ты выше уже поменял владельца, зачем еще раз?
 RUN chown -R www:www /var/www
 
 # Переключение на пользователя www

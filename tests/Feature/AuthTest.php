@@ -46,7 +46,8 @@ class AuthTest extends TestCase
     {
         $email = fake()->unique()->safeEmail();
         $password = 'password123';
-        
+
+        // problem: $user не используется дальше нигде
         $user = User::factory()->create([
             'email' => $email,
             'password' => $password,
@@ -105,7 +106,7 @@ class AuthTest extends TestCase
     public function test_invalid_credentials(): void
     {
         $email = fake()->unique()->safeEmail();
-        
+
         $user = User::factory()->create([
             'email' => $email,
             'password' => 'password123',

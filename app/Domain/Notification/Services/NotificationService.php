@@ -26,6 +26,7 @@ class NotificationService
     {
         $notification->markAsRead();
 
+        // problem: лишний запрос?
         return $notification->fresh();
     }
 
@@ -38,6 +39,7 @@ class NotificationService
 
     public function getUnreadCount(User $user): int
     {
+        //problem: mb cache?
         return $user->notifications()
             ->whereNull('read_at')
             ->count();
