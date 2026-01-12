@@ -72,7 +72,7 @@ class AuthController extends Controller
             // problem: потенциальная помойка из токенов
             $token = $user->createToken(AuthConstants::TOKEN_NAME)->plainTextToken;
 
-            // problem: side effect. Если что-то зависнет, то регистрация тоже может зависнуть
+            // problem: side effect. Если что-то зависнет, то авторизация тоже может зависнуть
             $motivationMessage = $this->motivationService->generateMessage();
 
             return $this->successResponse(

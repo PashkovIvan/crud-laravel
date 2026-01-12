@@ -41,7 +41,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5432:5432" #problem: локальный порт надо унести в .env
     networks:
       - task-manager-network
 
@@ -52,7 +52,7 @@ services:
     container_name: task-manager-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "16379:6379" #problem: локальный порт надо унести в .env
     networks:
       - task-manager-network
 
@@ -61,9 +61,9 @@ services:
     container_name: task-manager-ollama
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "11434:11434" #problem: локальный порт надо унести в .env
     volumes:
-      - ollama_data:/root/.ollama
+      - ollama_data:/root/.ollama #problem: а откуда берется ollama_data?
     networks:
       - task-manager-network
     environment:

@@ -18,6 +18,7 @@ readonly class CreateTaskDTO
         public ?int $assignedTo = null,
     ) {}
 
+    //problem метод fromArray, а передается еще какой-то userIdч
     public static function fromArray(array $data, int $userId): self
     {
         $status = isset($data['status']) 

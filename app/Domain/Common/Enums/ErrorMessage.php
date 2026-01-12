@@ -18,6 +18,7 @@ enum ErrorMessage: string
     case NOTIFICATION_NOT_FOUND = 'Уведомление не найдено';
     case ADMIN_ACCESS_REQUIRED = 'Доступ запрещен. Требуются права администратора.';
 
+    //problem: зачем этот метод?
     public function label(): string
     {
         return $this->value;
