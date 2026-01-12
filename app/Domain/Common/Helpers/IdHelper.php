@@ -15,6 +15,8 @@ class IdHelper
 
     public static function decrypt(string $encryptedId): int
     {
+        // problem: может не нужен тут try catch?
+        // problem: опасный текст, если он уходит наружу
         try {
             return (int) Crypt::decryptString($encryptedId);
         } catch (Exception $e) {

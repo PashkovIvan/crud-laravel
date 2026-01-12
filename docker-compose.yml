@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     volumes:
-      - ./:/var/www
+      - ./:/var/www # problem: для прода не пойдет. Ты в Dockerfile копируешь все файлы в образ, но тут ты монтируешь код снова
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - task-manager-network
@@ -21,9 +21,9 @@ services:
     container_name: task-manager-nginx
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8080:80" # problem: 443 пора не хватает
     volumes:
-      - ./:/var/www
+      - ./:/var/www # problem: зачем тут все снова копировать?
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - task-manager-network
@@ -35,15 +35,17 @@ services:
     container_name: task-manager-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: task_manager
-      POSTGRES_USER: task_user
-      POSTGRES_PASSWORD: task_password
+      POSTGRES_DB: task_manager # problem: нужно вынести в .env
+      POSTGRES_USER: task_user # problem: нужно вынести в .env
+      POSTGRES_PASSWORD: task_password # problem: нужно вынести в .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - task-manager-network
+
+    # problem: healthchecks ?
 
   redis:
     image: redis:7-alpine

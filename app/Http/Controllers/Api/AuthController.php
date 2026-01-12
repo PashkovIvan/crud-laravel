@@ -19,6 +19,10 @@ use Throwable;
 class AuthController extends Controller
 {
     public function __construct(
+        /*
+         * problem: readonly?
+         * problem: хорошо бы от интерфейса зависеть какого-то
+         * */
         private MotivationService $motivationService
     ) {}
 
@@ -26,7 +30,7 @@ class AuthController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -35,6 +39,8 @@ class AuthController extends Controller
 
             $token = $user->createToken(AuthConstants::TOKEN_NAME)->plainTextToken;
 
+            // problem: side effect. Если что-то зависнет, то регистрация тоже может зависнуть
+            // problem: если тут получим exception, то АПИ вернут 5xx. При повторной регистрации мы уже не сможем зарегать пользователя
             $motivationMessage = $this->motivationService->generateMessage();
 
             return $this->successResponse(
@@ -53,17 +59,20 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
+        // problem: RateLimit?
         try {
             $validated = $request->validated();
-            
+
             $user = User::where('email', $validated['email'])->first();
 
             if (!$user || !Hash::check($validated['password'], $user->password)) {
                 return $this->errorResponse(ErrorMessage::UNAUTHORIZED->value, 401);
             }
 
+            // problem: потенциальная помойка из токенов
             $token = $user->createToken(AuthConstants::TOKEN_NAME)->plainTextToken;
 
+            // problem: side effect. Если что-то зависнет, то регистрация тоже может зависнуть
             $motivationMessage = $this->motivationService->generateMessage();
 
             return $this->successResponse(
@@ -82,6 +91,8 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
+            // problem: может быть null и, соответственно fatal
+            // problem: нужно больше идемпотентности. Нет токенов - тоже 200
             $request->user()->currentAccessToken()->delete();
 
             return $this->successResponse(null, SuccessMessage::LOGOUT_SUCCESS->value);
@@ -92,6 +103,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        // problem: а к чему тут try catch?
         try {
             return $this->successResponse(new UserResource($request->user()));
         } catch (Throwable $e) {

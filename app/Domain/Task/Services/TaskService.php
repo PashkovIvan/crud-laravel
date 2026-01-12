@@ -11,6 +11,8 @@ use App\Domain\User\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
+// problem: кеш скидывается при каждом чихе
+// problem: мб скидывать кеш при значимых событиях?
 class TaskService
 {
     public function create(CreateTaskDTO $dto): Task
@@ -46,6 +48,7 @@ class TaskService
 
     public function getAll(int $perPage = PaginationConstants::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
+        // problem: mb cache?
         return Task::with(['user', 'assignedUser'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);

@@ -20,6 +20,10 @@ use Throwable;
 class NotificationController extends Controller
 {
     public function __construct(
+        /*
+        * problem: readonly?
+        * problem: хорошо бы от интерфейса зависеть какого-то
+        * */
         private NotificationService $notificationService
     ) {}
 
@@ -28,7 +32,7 @@ class NotificationController extends Controller
         try {
             $validated = $request->validated();
             $perPage = $validated['per_page'] ?? PaginationConstants::DEFAULT_PER_PAGE;
-            
+
             $notifications = $this->notificationService->getByUser($request->user(), $perPage);
 
             return $this->paginatedResponse($notifications, NotificationResource::class);
@@ -58,6 +62,7 @@ class NotificationController extends Controller
         try {
             $this->authorize('update', $notification);
 
+            // problem: идемпотентность?
             $notification = $this->notificationService->markAsRead($notification);
 
             return $this->successResponse(
@@ -74,8 +79,10 @@ class NotificationController extends Controller
     public function markAllAsRead(Request $request): JsonResponse
     {
         try {
+            // problem: идемпотентность?
             $count = $this->notificationService->markAllAsRead($request->user());
 
+            // problem: зачем в ответе count?
             return $this->successResponse(
                 ['count' => $count],
                 SuccessMessage::NOTIFICATIONS_ALL_READ->value

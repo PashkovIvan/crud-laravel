@@ -11,7 +11,9 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', new NoXss()],
+            // problem: а тут от xss не надо защиту?
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            // problem: а тут от xss не надо защиту?
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
