@@ -27,8 +27,10 @@ class UpdateTaskRequest extends FormRequest
         return [
             'title.max' => 'Название задачи не должно превышать 255 символов',
             'description.max' => 'Описание не должно превышать 1000 символов',
+            # problem есть же во всех твоих Enum trait с методом values
             'priority.in' => 'Приоритет должен быть одним из: ' . implode(', ', array_column(TaskPriority::cases(), 'value')),
             'due_date.date' => 'Дата выполнения должна быть корректной датой',
+            # problem есть же во всех твоих Enum trait с методом values
             'status.in' => 'Статус должен быть одним из: ' . implode(', ', array_column(TaskStatus::cases(), 'value')),
             'assigned_to.exists' => 'Выбранный пользователь не существует',
         ];

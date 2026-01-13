@@ -22,6 +22,7 @@ enum SuccessMessage: string
     case NOTIFICATION_READ = 'Уведомление отмечено как прочитанное';
     case NOTIFICATIONS_ALL_READ = 'Все уведомления отмечены как прочитанные';
 
+    // problem: зачем этот метод?
     public function label(): string
     {
         return $this->value;

@@ -28,6 +28,7 @@ class StoreTaskRequest extends FormRequest
             'title.required' => 'Название задачи обязательно для заполнения',
             'title.max' => 'Название задачи не должно превышать 255 символов',
             'description.max' => 'Описание не должно превышать 1000 символов',
+            # problem есть же во всех твоих Enum trait с методом values
             'priority.in' => 'Приоритет должен быть одним из: ' . implode(', ', array_column(TaskPriority::cases(), 'value')),
             'due_date.date' => 'Дата выполнения должна быть корректной датой',
             'due_date.after' => 'Дата выполнения должна быть в будущем',
